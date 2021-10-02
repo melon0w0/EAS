@@ -1,0 +1,1 @@
+Use event bubbling to handle events applied on all grid unit elements

@@ -1,7 +1,7 @@
 // ctrl key || right click erase
 // alt key || left click paint
 // also provide toggle option
-let color = "black";
+let color = "#A58888";
 
 const inputBrushColor = document.querySelector(".inputBrushColor");
 const inputBackgroundColor = document.querySelector(".inputBackgroundColor");
@@ -60,10 +60,12 @@ function resetGridsize(gridsize) {
     }
 }
 
+
 buttonClear.addEventListener("click", () => {
     for (unit of canvas.children) {
         unit.style.backgroundColor = "white";
     }
+    inputBackgroundColor.value = "#FFFFFF";
 });
 
 function changeColor(e) {
