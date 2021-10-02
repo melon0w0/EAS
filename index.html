@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+</head>
+
+
+<body>
+
+    <h1> Pixel art </h1>
+
+    <div class = container>
+        
+        <div class = settings>
+
+            <div>
+                <span>Brush color</span>
+                <input class = "inputBrushColor" type="color">
+                <button class = "addToPalette"> add to palette</button>
+            </div>
+
+            <div class = palette>
+                <div class = customColor></div>
+            </div>
+
+
+            <div>
+                <span>Background color</span>
+                <input class = "inputBackgroundColor" type="color">
+            </div>
+
+            <div>
+                <div>erasing mode</div>
+                <div>filling mode</div>
+                <div>shading mode</div>
+                <div>lightening mode</div>
+            </div>
+
+            <div>
+                <div>toggle rainbow!</div>
+                <div>toggle grid lines</div>
+                <div>toggle mirror</div>
+            </div>
+
+            <div>
+                <div>Grid Size</div>
+                <input class = inputGridsize type="range" value = "32" min = "1" max = "100">
+                <div> <span class = "displayGridsize">32</span> x <span class = displayGridsize>32</span> </div>
+            </div>
+
+            <button class = "clear"> Clear canvas</button>
+
+
+        </div>
+
+
+        <div class = canvas> </div>
+    </div>
+
+</body>
+
+</html>
