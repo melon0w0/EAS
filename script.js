@@ -24,11 +24,9 @@ const buttonClear = document.querySelector(".clear");
 
 canvas.addEventListener("contextmenu", e => e.preventDefault());
 palette.addEventListener("contextmenu", e => e.preventDefault());
-canvas.setAttribute("tabindex", 0);
-
 
 //initialize the app
-resetGridsize(32);
+resetGridsize(16);
 resetPalette();
 //////////////////////
 
@@ -97,6 +95,9 @@ function resetGridsize(gridsize) {
         }
         unit.style.width = `${1/gridsize*100}%`;
         unit.style.height = `${1/gridsize*100}%`;
+
+        unit.setAttribute("tabindex","0")
+        unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
         canvas.appendChild(unit);
     }
 }
@@ -124,7 +125,7 @@ for (let button of arrayOfButtonsForToggle) {
 } 
 // we add the toggleButton function first to all the buttons' click event
 // then we add that whatever unique functions fired after this function
-// note that the buttons' value will be already reversed after  toggleButton is called
+// note that the buttons' value will be already reversed after toggleButton is called
 
 buttonToggleGrid.addEventListener("click", function(e) {
     if (buttonToggleGrid.value == "on") {
@@ -138,15 +139,10 @@ buttonToggleGrid.addEventListener("click", function(e) {
     }
 })
 
+//canvas section
 canvas.addEventListener("mousemove",changeColor); 
-
-canvas.addEventListener("keydown",testing);
-
-function testing(e) {
-    console.log("here's the event");
-    if (e.altKey == true) {console.log("alt key is pressed");}
-    console.log(e.buttons);
-}
+canvas.addEventListener("mousedown",changeColor);
+canvas.addEventListener("keydown",changeColor);
 
 function changeColor(e) {
     if (e.target.parentElement == canvas) {
