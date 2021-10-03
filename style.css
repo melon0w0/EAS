@@ -44,7 +44,7 @@ header {
     margin-top: 50px;
 }
 
-h1 {
+header h1 {
     color: rgb(230, 130, 130);
     font-family: 'VT323', monospace;
     -webkit-transform: scale(1.5, 1);
@@ -130,7 +130,7 @@ button:hover{
 footer {
     background-color: rgb(244, 152, 158);
     text-align: center;
-    margin-top: 100px;
+    margin-top: 50px;
     padding: 10px 0;
     color: white;
 }
@@ -140,6 +140,23 @@ a {
 }
 
 .unit.gridOn {
-    border: 1px dashed rgb(230, 230, 230);
+    border: 1px solid rgb(230, 230, 230);
 }
 
+.tips {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5vw;
+    color: rgb(233, 141, 150);
+    background-color: rgba(255, 255, 255, 0.63);
+    width: 70vw;
+    margin: 80px auto;
+    margin-bottom: 0;
+    padding: 10px 30px;
+    border-radius: 10px;
+}
+
+.tips h1 {
+    font-size: 20px;
+}

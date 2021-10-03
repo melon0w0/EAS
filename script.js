@@ -20,6 +20,11 @@ const buttonMirror = document.querySelector("button[data-index = '7']");
 const arrayOfButtonsForToggle = [buttonToggleGrid, buttonShading, buttonLighten, buttonRainbow, buttonMirror];
 
 const canvas = document.querySelector(".canvas");
+/* const unit = document.createElement("div");
+unit.classList.add("unit");
+unit.setAttribute("tabindex","0")
+unit.addEventListener("mouseenter", (e)=> {e.target.focus()}) */
+
 const buttonClear = document.querySelector(".clear");
 
 canvas.addEventListener("contextmenu", e => e.preventDefault());
