@@ -12,12 +12,19 @@ customColor.parentElement.removeChild(customColor);
 const inputGridsize = document.querySelector(".inputGridsize");
 const displayGridsize = document.querySelectorAll(".displayGridsize");
 
-const buttonClear = document.querySelector(".clear");
-const buttonToggleGrid = document.querySelector("button[data-index = '7']");
+const buttonShading = document.querySelector("button[data-index = '3']");
+const buttonLighten = document.querySelector("button[data-index = '4']");
+const buttonRainbow = document.querySelector("button[data-index = '5']");
+const buttonToggleGrid = document.querySelector("button[data-index = '6']");
+const buttonMirror = document.querySelector("button[data-index = '7']");
+const arrayOfButtonsForToggle = [buttonToggleGrid, buttonShading, buttonLighten, buttonRainbow, buttonMirror];
 
 const canvas = document.querySelector(".canvas");
+const buttonClear = document.querySelector(".clear");
+
 canvas.addEventListener("contextmenu", e => e.preventDefault());
 palette.addEventListener("contextmenu", e => e.preventDefault());
+canvas.setAttribute("tabindex", 0);
 
 
 //initialize the app
@@ -95,25 +102,52 @@ function resetGridsize(gridsize) {
 }
 
 // buttons toggling section
+// note: if you write 2 functions for an element's event listener of the same type
+// e.g. element.addEventListener("click", function1)
+//      element.addEventListener("click", function2)
+// function 1 will be called before function 2
+
+function toggleButton(e) { //this only changes the value and appearence of the button
+    button = e.target;
+    if (button.value == "off") {
+        button.value = "on";
+        button.textContent = button.textContent.replace("off","on");
+        
+    } else { //button.value == "on"
+        button.value = "off";
+        button.textContent = button.textContent.replace("on","off");
+    } 
+}
+
+for (let button of arrayOfButtonsForToggle) {
+    button.addEventListener("click", toggleButton);
+} 
+// we add the toggleButton function first to all the buttons' click event
+// then we add that whatever unique functions fired after this function
+// note that the buttons' value will be already reversed after  toggleButton is called
+
 buttonToggleGrid.addEventListener("click", function(e) {
-    if (buttonToggleGrid.value == "off") {
-        buttonToggleGrid.value = "on";
-        buttonToggleGrid.textContent = "grid lines: on";
+    if (buttonToggleGrid.value == "on") {
         for (let unit of canvas.children) {
             unit.classList.add("gridOn");
         }
     } else {
-        buttonToggleGrid.value = "off";
-        buttonToggleGrid.textContent = "grid lines: off";
         for (let unit of canvas.children) {
             unit.classList.remove("gridOn");
         }
     }
 })
 
-
-
 canvas.addEventListener("mousemove",changeColor); 
+
+canvas.addEventListener("keydown",testing);
+
+function testing(e) {
+    console.log("here's the event");
+    if (e.altKey == true) {console.log("alt key is pressed");}
+    console.log(e.buttons);
+}
+
 function changeColor(e) {
     if (e.target.parentElement == canvas) {
         if (checkPaintingMode(e) == "painting"){
@@ -123,15 +157,20 @@ function changeColor(e) {
     }
 }
 
-
 function checkPaintingMode(e) {
     if (e.altKey == true || e.buttons == 1) {
         return "painting";
     }
-    if (e.ctrlKey == true || e.buttons ==2) {
+    if (e.ctrlKey == true || e.buttons == 2) {
         return "erasing";
     }
+
 }
+
+function checkBrushMode(e) { //shading, lightening or rainbow
+    return;
+}
+
 
 buttonClear.addEventListener("click", () => {
     for (unit of canvas.children) {
@@ -163,4 +202,4 @@ function removeChildElements(parentElement) {
 
 // e.altKey, e.ctrlKey
 
-//rgb(x, x, x)    x can be 1-3 digits
+
