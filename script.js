@@ -17,7 +17,8 @@ const buttonLighten = document.querySelector("button[data-index = '4']");
 const buttonRainbow = document.querySelector("button[data-index = '5']");
 const buttonToggleGrid = document.querySelector("button[data-index = '6']");
 const buttonMirror = document.querySelector("button[data-index = '7']");
-const arrayOfButtonsForToggle = [buttonToggleGrid, buttonShading, buttonLighten, buttonRainbow, buttonMirror];
+const regularButtons = [buttonToggleGrid, buttonMirror];
+const mutuallyExclusiveButtons = [buttonShading, buttonLighten, buttonRainbow];
 
 const canvas = document.querySelector(".canvas");
 const buttonClear = document.querySelector(".clear");
@@ -58,7 +59,7 @@ palette.addEventListener("contextmenu", function(e) {
     if (e.target.parentElement == palette) {
         e.target.style.backgroundColor = "";
     }
-});
+}); //right click color in the palette to delete (reset to nothing)
 
 buttonAddToPalette.addEventListener("click", function(e) {
     for (let child of palette.children) {
@@ -110,8 +111,8 @@ function resetGridsize(gridsize) {
 //      element.addEventListener("click", function2)
 // function 1 will be called before function 2 when the event is detected
 
-function toggleButton(e) { //this only changes the value and appearence of the button
-    button = e.target;
+function toggleNormalButton(e) { //this only changes the value and appearence of the button
+    let button = e.target;
     if (button.value == "off") {
         button.value = "on";
         button.textContent = button.textContent.replace("off","on");
@@ -122,13 +123,12 @@ function toggleButton(e) { //this only changes the value and appearence of the b
     } 
 }
 
-for (let button of arrayOfButtonsForToggle) {
-    button.addEventListener("click", toggleButton);
+for (let button of regularButtons) {
+    button.addEventListener("click", toggleNormalButton);
 } 
 // we add the toggleButton function first to all the buttons' click event
 // then we add that whatever unique functions fired after this function
 // note that the buttons' value will be already reversed after toggleButton is called
-
 buttonToggleGrid.addEventListener("click", function(e) {
     if (buttonToggleGrid.value == "on") {
         for (let unit of canvas.children) {
@@ -141,18 +141,58 @@ buttonToggleGrid.addEventListener("click", function(e) {
     }
 })
 
+// for the mutually exclusive buttons, only 1 button can be on at a time. How to do this?
+function toggleMutuallyExclusiveButton(e) {
+    let button = e.target;
+
+    if (button.value == "off") {
+        for (let otherButton of mutuallyExclusiveButtons) {
+            if (otherButton.value == "on") {
+                alert("Only 1 button can be on at a time for this section!");
+                return;} //if other but is already on, don't do anything
+            }
+        // loop finishes if all buttons are off, then we shall toggle the button on
+        button.value = "on"
+        button.textContent = button.textContent.replace("off","on");
+        
+    } else { //button is on
+        button.value = "off";
+        button.textContent = button.textContent.replace("on","off");
+    }
+}
+
+for (let button of mutuallyExclusiveButtons) {
+    button.addEventListener("click", toggleMutuallyExclusiveButton);
+}
+
 //canvas section
-canvas.addEventListener("mousemove",changeColor); 
+canvas.addEventListener("mouseover",changeColor); 
 canvas.addEventListener("mousedown",changeColor);
 canvas.addEventListener("keydown",changeColor);
 
 function changeColor(e) {
-    if (e.target.parentElement == canvas) {
-        if (checkPaintingMode(e) == "painting"){
-            e.target.style.backgroundColor = color;}
-        else if (checkPaintingMode(e) == "erasing"){
-            e.target.style.backgroundColor = "white";}
+    if (e.target.parentElement != canvas) {return;}
+
+    if (checkPaintingMode(e) == "painting"){ 
+        switch (checkBrushMode()) {
+            case "shading":
+                let targetColor = e.target.style.backgroundColor; //rgb
+                //convert to hsl first, then darken => raise s, lower l
+                let HSLarray = rgbtoHSL(targetColor);
+                HSLarray[1] += 2;  //raise saturation
+                HSLarray[2] -= 5;  //lower lightness
+                e.target.style.backgroundColor = HSLarrayToString(HSLarray);          
+            case "lighten":
+                break
+            case "rainbow":
+                break
+            default:
+                e.target.style.backgroundColor = color;
+        }
     }
+    else if (checkPaintingMode(e) == "erasing"){
+        e.target.style.backgroundColor = "white";}
+    
 }
 
 function checkPaintingMode(e) {
@@ -162,13 +202,13 @@ function checkPaintingMode(e) {
     if (e.ctrlKey == true || e.buttons == 2) {
         return "erasing";
     }
-
 }
 
-function checkBrushMode(e) { //shading, lightening or rainbow
-    return;
+function checkBrushMode() { //shading, lightening or rainbow
+    if (buttonShading.value == "on") {return "shading";}
+    if (buttonLighten.value == "on") {return "lighten";}
+    if (buttonRainbow.value == "on") {return "rainbow";}
 }
-
 
 buttonClear.addEventListener("click", () => {
     for (unit of canvas.children) {
@@ -184,8 +224,48 @@ function rgbToHex(rgbString) {
     let g = Number(rgbArray[1]);
     let b = Number(rgbArray[2]);
     return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    //credit https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
   }
 
+function rgbtoHSL(rgbString) {
+    let rgbArray = rgbString.match(/\d+/g);
+    let r = Number(rgbArray[0]);
+    let g = Number(rgbArray[1]);
+    let b = Number(rgbArray[2]);
+    r /= 255, g /= 255, b /= 255;
+
+    let cmin = Math.min(r,g,b),
+    cmax = Math.max(r,g,b),
+    delta = cmax - cmin,
+    h = 0,
+    s = 0,
+    l = 0;
+
+    if (delta == 0)
+        h = 0;
+    else if (cmax == r)
+        h = ((g - b) / delta) % 6;
+    else if (cmax == g)
+        h = (b - r) / delta + 2;
+    else
+        h = (r - g) / delta + 4;
+        h = Math.round(h * 60);
+    if (h < 0)
+        h += 360;
+
+    l = (cmax + cmin) / 2;
+    s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+    s = +(s * 100).toFixed(1);
+    l = +(l * 100).toFixed(1);
+
+    return [h,s,l];
+    return "hsl(" + h + "," + s + "%," + l + "%)";
+  //credit https://css-tricks.com/converting-color-spaces-in-javascript/
+}
+
+function HSLarrayToString(arr) {
+    return `hsl(${arr[0]}, ${arr[1]}%, ${arr[2]}%)`
+}
 
 function removeChildElements(parentElement) {
     while (parentElement.firstChild) {

@@ -51,12 +51,15 @@
                 <div> <span class = "displayGridsize">16</span> x <span class = displayGridsize>16</span> </div>
             </div>
 
-            <div class = "toggle_ settings">
-                <button value = off data-index = 3 >shading mode: off</button>
-                <button value = off data-index = 4 >lightening mode: off </button>
-                <button value = off data-index = 5 >rainbow brush: off </button>
+            <div class = "toggle_1 settings"> <!-- mutually exclusive buttons -->
+                <button value = off data-index = 3 >(x)shading mode: off</button>
+                <button value = off data-index = 4 >(x)lightening mode: off </button>
+                <button value = off data-index = 5 >(x)rainbow brush: off </button>
+            </div>
+
+            <div class = "toggle_2 settings"> <!-- regular buttons -->
                 <button value = on data-index = 6 >grid lines: on </button>
-                <button value = off data-index = 7 >mirror: off </button>
+                <button value = off data-index = 7 >(x)mirror: off </button>
             </div>
 
         </div>
@@ -65,7 +68,7 @@
             <div class = canvas > </div> <!-- probably don't need tabindex = 0 -->
             <div>
                 <button class = "clear"> Clear canvas</button>
-                <button> export </button>
+                <button> (x)export </button>
             </div>
         </div>
         
