@@ -20,11 +20,6 @@ const buttonMirror = document.querySelector("button[data-index = '7']");
 const arrayOfButtonsForToggle = [buttonToggleGrid, buttonShading, buttonLighten, buttonRainbow, buttonMirror];
 
 const canvas = document.querySelector(".canvas");
-/* const unit = document.createElement("div");
-unit.classList.add("unit");
-unit.setAttribute("tabindex","0")
-unit.addEventListener("mouseenter", (e)=> {e.target.focus()}) */
-
 const buttonClear = document.querySelector(".clear");
 
 canvas.addEventListener("contextmenu", e => e.preventDefault());
@@ -86,7 +81,10 @@ inputGridsize.addEventListener("input", function(e) {
     let gridsize = e.target.value;
     displayGridsize[0].textContent = gridsize;
     displayGridsize[1].textContent = gridsize;
-    resetGridsize(gridsize);
+})
+
+inputGridsize.addEventListener("change", function(e) {
+    resetGridsize(e.target.value);
 })
 
 function resetGridsize(gridsize) {
@@ -100,7 +98,6 @@ function resetGridsize(gridsize) {
         }
         unit.style.width = `${1/gridsize*100}%`;
         unit.style.height = `${1/gridsize*100}%`;
-
         unit.setAttribute("tabindex","0")
         unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
         canvas.appendChild(unit);
@@ -108,10 +105,10 @@ function resetGridsize(gridsize) {
 }
 
 // buttons toggling section
-// note: if you write 2 functions for an element's event listener of the same type
+// note: if you write 2 callback functions for an element's event listener of the same type
 // e.g. element.addEventListener("click", function1)
 //      element.addEventListener("click", function2)
-// function 1 will be called before function 2
+// function 1 will be called before function 2 when the event is detected
 
 function toggleButton(e) { //this only changes the value and appearence of the button
     button = e.target;
