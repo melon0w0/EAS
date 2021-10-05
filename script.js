@@ -1,5 +1,9 @@
 let color = "#A58888";  //current brush color. changes each time user inputs color
-let gridSize = 16;  //changes each time user finishing adjusting gridSize 
+let gridSize = 16;  //changes each time user finishing adjusting gridSize
+
+let maxHistoryStored = 10;
+let history;  //array of canvas history (in 1D array form). 
+let loc; //user's current "location" in the history array.
 
 const inputBrushColor = document.querySelector(".inputBrushColor");
 const inputBackgroundColor = document.querySelector(".inputBackgroundColor");
@@ -23,6 +27,8 @@ const mutuallyExclusiveButtons = [buttonShading, buttonLighten, buttonRainbow];
 
 const canvas = document.querySelector(".canvas");
 const buttonClear = document.querySelector(".clear");
+const buttonUndo = document.querySelector("button[data-index = '8']");
+const buttonRedo = document.querySelector("button[data-index = '9']");
 const rainbowColors = ["#FF8B94", "#FFAAA5", "#FFD3B6", "#DCEDC1", "#A8E6CF", "#A8B6F1", "#E9AADF"]
 
 canvas.addEventListener("contextmenu", e => e.preventDefault());
@@ -32,6 +38,7 @@ palette.addEventListener("contextmenu", e => e.preventDefault());
 resetGridsize(16);
 resetPalette();
 //////////////////////
+
 
 // colorInputElement.value  <= always in hex, and only accepts hex value;
 // element.style.backgroundColor <= accepts hex but always converts into rgb. like WHY?????
@@ -106,6 +113,9 @@ function resetGridsize(gridsize) {
         unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
         canvas.appendChild(unit);
     }
+    history = [];
+    history.push(gen1dArrayFromCanvas());
+    loc = 0;
 }
 
 // buttons toggling section
@@ -172,8 +182,10 @@ for (let button of mutuallyExclusiveButtons) {
 
 //canvas section
 canvas.addEventListener("mouseover",changeColor); 
-//canvas.addEventListener("mousedown",changeColor);
+canvas.addEventListener("mousedown",changeColor);
 canvas.addEventListener("keydown",changeColor);
+canvas.addEventListener("dblclick", floodFill); //dbclick currently doesn't work bc there's a mousedown event 
+
 
 function changeColor(e) {
     if (e.target.parentElement != canvas) {return;}
@@ -310,9 +322,16 @@ function getRandomInt(max) {
  
 // e.altKey, e.ctrlKey
 
+function gen1dArrayFromCanvas() {
+    arr = [];
+    for (let unit of canvas.children) {
+        arr.push(unit.cloneNode());
+    }
+    return arr;
+}
 
 //Flood fill algorithm
-function genArrayFromCanvas() {
+function gen2dArrayFromCanvas() {
     //initialize an 2d array with empty rows. number of rows = grid size
     let arr = [];
     for (let a = 0; a < gridSize; a++) {
@@ -344,7 +363,6 @@ function findNeighbors(coord) {  //coord is a coord array [x,y] of the target
 let visited = []; //coordinates of changed grid unit
 
 function fill(array, x, y, oldColor, newColor) {
-    // in the event listener's callback function (floodFill)
     // pass color to newColor;
     // pass e.target.style.backgroundColor to oldColor 
     
@@ -364,10 +382,51 @@ function fill(array, x, y, oldColor, newColor) {
 }
 
 function floodFill(e) {
-    let canvasArray = genArrayFromCanvas();
+    let canvas2dArray = gen2dArrayFromCanvas();
     let coord = getCoordinatesOfTarget(e);  // [x,y]
     let currentColor = e.target.style.backgroundColor;
-    fill(canvasArray, coord[0], coord[1], currentColor, color);
+    fill(canvas2dArray, coord[0], coord[1], currentColor, color);
+    visited = [];
 }
 
-canvas.addEventListener("dblclick", floodFill);
+
+// "version control" //////////////////////////////////
+function recordMove() {
+    if (loc+1 != history.length) { //if user's are at a previous location
+        history = history.slice(0, loc+1)
+    }
+
+    if (history.length != maxHistoryStored) {
+        loc++;
+    } else {//history is full, reset it!
+        histroy = [];
+        loc = 0;
+    }
+    history.push(gen1dArrayFromCanvas());
+}
+
+function undo() {
+    if (loc == 0) {return;}
+    loc--;
+    previousState = history[loc];
+    removeChildElements(canvas);
+    for (let unit of previousState) {
+        canvas.appendChild(unit);
+    }
+}
+
+function redo() {
+    if (loc+1 ==  history.length) {return;}
+    loc++;
+    nextState = history[loc];
+    removeChildElements(canvas);
+    for (let unit of nextState) {
+        canvas.appendChild(unit);
+    }
+}
+
+canvas.addEventListener("mouseup", recordMove);
+canvas.addEventListener("keyup", recordMove);
+buttonClear.addEventListener("click", recordMove);
+buttonUndo.addEventListener("click", undo);
+buttonRedo.addEventListener("click", redo);

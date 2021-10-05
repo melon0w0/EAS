@@ -38,11 +38,11 @@
 
 
             <div class = "palette_ settings">
-                <button value = off data-index = 1> + brush color to palette</button>
+                <button data-index = 1> + brush color to palette</button>
                 <div class = palette>
                     <div class = customColor></div>
                 </div>
-                <button value = off data-index = 2> reset palette </button>
+                <button data-index = 2> reset palette </button>
             </div>
 
             <div class = "grid_ settings">
@@ -65,7 +65,13 @@
         </div>
 
         <div>
+            <div>
+                <button data-index = 8>undo</button>
+                <button data-index = 9>redo</button>
+            </div>
+
             <div class = canvas > </div> <!-- probably don't need tabindex = 0 -->
+
             <div>
                 <button class = "clear"> Clear canvas</button>
                 <button> (x)export </button>
