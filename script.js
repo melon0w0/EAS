@@ -1,3 +1,4 @@
+//#region variable declarations and app initializing
 let color = "#A58888";  //current brush color. changes each time user inputs color
 let gridSize = 16;  //changes each time user finishing adjusting gridSize
 
@@ -37,9 +38,9 @@ palette.addEventListener("contextmenu", e => e.preventDefault());
 //initialize the app
 resetGridsize(16);
 resetPalette();
-//////////////////////
+//#endregion
 
-
+//#region color and palette settings
 // colorInputElement.value  <= always in hex, and only accepts hex value;
 // element.style.backgroundColor <= accepts hex but always converts into rgb. like WHY?????
 
@@ -86,7 +87,9 @@ function resetPalette() {
         palette.appendChild(customColor.cloneNode());
     }
 }
+//#endregion
 
+//#region gridsize setting
 inputGridsize.addEventListener("input", function(e) {
     let gridsize = e.target.value;
     displayGridsize[0].textContent = gridsize;
@@ -114,11 +117,12 @@ function resetGridsize(gridsize) {
         canvas.appendChild(unit);
     }
     history = [];
-    history.push(gen1dArrayFromCanvas());
+    history.push(archiveFromCanvas());
     loc = 0;
 }
+//#endregion
 
-// buttons toggling section
+//#region toggleable buttons
 // note: if you write 2 callback functions for an element's event listener of the same type
 // e.g. element.addEventListener("click", function1)
 //      element.addEventListener("click", function2)
@@ -179,8 +183,9 @@ function toggleMutuallyExclusiveButton(e) {
 for (let button of mutuallyExclusiveButtons) {
     button.addEventListener("click", toggleMutuallyExclusiveButton);
 }
+//#endregion
 
-//canvas section
+//#region drawing related and exporting
 canvas.addEventListener("mouseover",changeColor); 
 canvas.addEventListener("mousedown",changeColor);
 canvas.addEventListener("keydown",changeColor);
@@ -254,83 +259,9 @@ buttonClear.addEventListener("click", () => {
     }
     inputBackgroundColor.value = "#FFFFFF";
 });
+//#endregion
 
-
-function rgbToHex(rgbString) {
-    let rgbArray = rgbString.match(/\d+/g);
-    let r = Number(rgbArray[0]);
-    let g = Number(rgbArray[1]);
-    let b = Number(rgbArray[2]);
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-    //credit https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-  }
-
-function rgbtoHSL(rgbString) {
-    let rgbArray = rgbString.match(/\d+/g);
-    let r = Number(rgbArray[0]);
-    let g = Number(rgbArray[1]);
-    let b = Number(rgbArray[2]);
-    r /= 255, g /= 255, b /= 255;
-
-    let cmin = Math.min(r,g,b),
-    cmax = Math.max(r,g,b),
-    delta = cmax - cmin,
-    h = 0,
-    s = 0,
-    l = 0;
-
-    if (delta == 0)
-        h = 0;
-    else if (cmax == r)
-        h = ((g - b) / delta) % 6;
-    else if (cmax == g)
-        h = (b - r) / delta + 2;
-    else
-        h = (r - g) / delta + 4;
-        h = Math.round(h * 60);
-    if (h < 0)
-        h += 360;
-
-    l = (cmax + cmin) / 2;
-    s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
-    s = +(s * 100).toFixed(1);
-    l = +(l * 100).toFixed(1);
-
-    return [h,s,l];
-    return "hsl(" + h + "," + s + "%," + l + "%)";
-  //credit https://css-tricks.com/converting-color-spaces-in-javascript/
-}
-
-function HSLarrayToString(arr) {
-    return `hsl(${arr[0]}, ${arr[1]}%, ${arr[2]}%)`
-}
-
-function removeChildElements(parentElement) {
-    while (parentElement.firstChild) {
-        parentElement.removeChild(parentElement.lastChild);
-    }
-}
-
-function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
-  }
-
-// e.buttons
-//1 left click
-//2 right click
-//3 both click
- 
-// e.altKey, e.ctrlKey
-
-function gen1dArrayFromCanvas() {
-    arr = [];
-    for (let unit of canvas.children) {
-        arr.push(unit.cloneNode());
-    }
-    return arr;
-}
-
-//Flood fill algorithm
+//#region Flood fill algorithm
 function gen2dArrayFromCanvas() {
     //initialize an 2d array with empty rows. number of rows = grid size
     let arr = [];
@@ -388,9 +319,17 @@ function floodFill(e) {
     fill(canvas2dArray, coord[0], coord[1], currentColor, color);
     visited = [];
 }
+//#endregion
 
+//#region undo/redo
+function archiveFromCanvas() {
+    arr = [];
+    for (let unit of canvas.children) {
+        arr.push(unit.cloneNode());
+    }
+    return arr;
+}
 
-// "version control" //////////////////////////////////
 function recordMove() {
     if (loc+1 != history.length) { //if user's are at a previous location
         history = history.slice(0, loc+1)
@@ -398,11 +337,12 @@ function recordMove() {
 
     if (history.length != maxHistoryStored) {
         loc++;
-    } else {//history is full, reset it!
+    } else {//history is full, reset it!  
+        //<= this is not a great idea, need to instead drop the first archive from history
         histroy = [];
         loc = 0;
     }
-    history.push(gen1dArrayFromCanvas());
+    history.push(archiveFromCanvas());
 }
 
 function undo() {
@@ -411,7 +351,12 @@ function undo() {
     previousState = history[loc];
     removeChildElements(canvas);
     for (let unit of previousState) {
-        canvas.appendChild(unit);
+        canvas.appendChild(unit.cloneNode());
+    }
+    //although we recover it from an archived state/array
+    //the event listeners aren't archived! need to add them back
+    for (let unit of canvas.children) {
+        unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
     }
 }
 
@@ -421,7 +366,11 @@ function redo() {
     nextState = history[loc];
     removeChildElements(canvas);
     for (let unit of nextState) {
-        canvas.appendChild(unit);
+        canvas.appendChild(unit.cloneNode());
+    }
+    //same as before, add the event listeners back
+    for (let unit of canvas.children) {
+        unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
     }
 }
 
@@ -430,3 +379,68 @@ canvas.addEventListener("keyup", recordMove);
 buttonClear.addEventListener("click", recordMove);
 buttonUndo.addEventListener("click", undo);
 buttonRedo.addEventListener("click", redo);
+//#endregion
+
+//#region color format conversion functions
+function rgbToHex(rgbString) {
+    let rgbArray = rgbString.match(/\d+/g);
+    let r = Number(rgbArray[0]);
+    let g = Number(rgbArray[1]);
+    let b = Number(rgbArray[2]);
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    //credit https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+  }
+
+function rgbtoHSL(rgbString) {
+    let rgbArray = rgbString.match(/\d+/g);
+    let r = Number(rgbArray[0]);
+    let g = Number(rgbArray[1]);
+    let b = Number(rgbArray[2]);
+    r /= 255, g /= 255, b /= 255;
+
+    let cmin = Math.min(r,g,b),
+    cmax = Math.max(r,g,b),
+    delta = cmax - cmin,
+    h = 0,
+    s = 0,
+    l = 0;
+
+    if (delta == 0)
+        h = 0;
+    else if (cmax == r)
+        h = ((g - b) / delta) % 6;
+    else if (cmax == g)
+        h = (b - r) / delta + 2;
+    else
+        h = (r - g) / delta + 4;
+        h = Math.round(h * 60);
+    if (h < 0)
+        h += 360;
+
+    l = (cmax + cmin) / 2;
+    s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+    s = +(s * 100).toFixed(1);
+    l = +(l * 100).toFixed(1);
+
+    return [h,s,l];
+    return "hsl(" + h + "," + s + "%," + l + "%)";
+  //credit https://css-tricks.com/converting-color-spaces-in-javascript/
+}
+
+function HSLarrayToString(arr) {
+    return `hsl(${arr[0]}, ${arr[1]}%, ${arr[2]}%)`
+}
+//#endregion
+
+//#region miscellaneous functions
+function removeChildElements(parentElement) {
+    while (parentElement.firstChild) {
+        parentElement.removeChild(parentElement.lastChild);
+    }
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+  }
+//#endregion
+

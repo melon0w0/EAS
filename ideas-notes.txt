@@ -1,0 +1,6 @@
+// e.buttons
+//1 left click
+//2 right click
+//3 both click
+ 
+// e.altKey, e.ctrlKey
