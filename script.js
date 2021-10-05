@@ -1,5 +1,5 @@
-let color = "#A58888";
-let gridSize = 16;
+let color = "#A58888";  //current brush color. changes each time user inputs color
+let gridSize = 16;  //changes each time user finishing adjusting gridSize 
 
 const inputBrushColor = document.querySelector(".inputBrushColor");
 const inputBackgroundColor = document.querySelector(".inputBackgroundColor");
@@ -18,9 +18,8 @@ const buttonLighten = document.querySelector("button[data-index = '4']");
 const buttonRainbow = document.querySelector("button[data-index = '5']");
 const buttonToggleGrid = document.querySelector("button[data-index = '6']");
 const buttonMirror = document.querySelector("button[data-index = '7']");
-const buttonFill = document.querySelector("button[data-index = 'fill']");
 const regularButtons = [buttonToggleGrid, buttonMirror];
-const mutuallyExclusiveButtons = [buttonShading, buttonLighten, buttonRainbow, buttonFill];
+const mutuallyExclusiveButtons = [buttonShading, buttonLighten, buttonRainbow];
 
 const canvas = document.querySelector(".canvas");
 const buttonClear = document.querySelector(".clear");
@@ -173,7 +172,7 @@ for (let button of mutuallyExclusiveButtons) {
 
 //canvas section
 canvas.addEventListener("mouseover",changeColor); 
-canvas.addEventListener("mousedown",changeColor);
+//canvas.addEventListener("mousedown",changeColor);
 canvas.addEventListener("keydown",changeColor);
 
 function changeColor(e) {
@@ -312,10 +311,7 @@ function getRandomInt(max) {
 // e.altKey, e.ctrlKey
 
 
-//onece you click on the canvas with filling = "on" (add event listener)
-// a 2-dimensionary array is generated according to the canvas
-// find out where the mouse is clicking on the array
-
+//Flood fill algorithm
 function genArrayFromCanvas() {
     //initialize an 2d array with empty rows. number of rows = grid size
     let arr = [];
@@ -338,14 +334,14 @@ function getCoordinatesOfTarget(e) {
 }
 
 function findNeighbors(coord) {  //coord is a coord array [x,y] of the target
-    let x = coord[1];
-    let y = coord[2];
-    return [
-        [x-1,y-1],[x,y-1],[x+1,y-1],
-        [x-1,y],[x+1,y],
-        [x-1,y+1],[x,y+1],[x+1,y+1]
-    ]; //this can return invalid(negative) coords, like [-1, 2]
+    let x = coord[0];
+    let y = coord[1];
+    return [[x,y-1],[x-1,y],[x+1,y],[x,y+1]]; 
+    //this can return invalid(negative) coords, like [-1, 2] 
+    //but we'll filter invalid coords out in fill()
 }
+
+let visited = []; //coordinates of changed grid unit
 
 function fill(array, x, y, oldColor, newColor) {
     // in the event listener's callback function (floodFill)
@@ -355,8 +351,6 @@ function fill(array, x, y, oldColor, newColor) {
     if ( x<0 || x>= array.length) {return;}
     if ( y<0 || y>= array[0].length) {return;}
     if (array[x][y].style.backgroundColor != oldColor) {return;}
-
-    let visited = []; //coordinates that have been visited (color changed)
 
     array[x][y].style.backgroundColor = newColor;
     visited.push([x,y]);
@@ -376,3 +370,4 @@ function floodFill(e) {
     fill(canvasArray, coord[0], coord[1], currentColor, color);
 }
 
+canvas.addEventListener("dblclick", floodFill);
