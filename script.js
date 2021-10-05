@@ -1,4 +1,5 @@
 let color = "#A58888";
+let gridSize = 16;
 
 const inputBrushColor = document.querySelector(".inputBrushColor");
 const inputBackgroundColor = document.querySelector(".inputBackgroundColor");
@@ -17,11 +18,13 @@ const buttonLighten = document.querySelector("button[data-index = '4']");
 const buttonRainbow = document.querySelector("button[data-index = '5']");
 const buttonToggleGrid = document.querySelector("button[data-index = '6']");
 const buttonMirror = document.querySelector("button[data-index = '7']");
+const buttonFill = document.querySelector("button[data-index = 'fill']");
 const regularButtons = [buttonToggleGrid, buttonMirror];
-const mutuallyExclusiveButtons = [buttonShading, buttonLighten, buttonRainbow];
+const mutuallyExclusiveButtons = [buttonShading, buttonLighten, buttonRainbow, buttonFill];
 
 const canvas = document.querySelector(".canvas");
 const buttonClear = document.querySelector(".clear");
+const rainbowColors = ["#FF8B94", "#FFAAA5", "#FFD3B6", "#DCEDC1", "#A8E6CF", "#A8B6F1", "#E9AADF"]
 
 canvas.addEventListener("contextmenu", e => e.preventDefault());
 palette.addEventListener("contextmenu", e => e.preventDefault());
@@ -86,6 +89,7 @@ inputGridsize.addEventListener("input", function(e) {
 
 inputGridsize.addEventListener("change", function(e) {
     resetGridsize(e.target.value);
+    gridSize = e.target.value;
 })
 
 function resetGridsize(gridsize) {
@@ -148,10 +152,12 @@ function toggleMutuallyExclusiveButton(e) {
     if (button.value == "off") {
         for (let otherButton of mutuallyExclusiveButtons) {
             if (otherButton.value == "on") {
-                alert("Only 1 button can be on at a time for this section!");
-                return;} //if other but is already on, don't do anything
+                otherButton.value = "off";
+                otherButton.textContent = otherButton.textContent.replace("on", "off");
+                break;
+            } 
             }
-        // loop finishes if all buttons are off, then we shall toggle the button on
+        // after we toggled the other button to off, we shall toggle the button on
         button.value = "on"
         button.textContent = button.textContent.replace("off","on");
         
@@ -174,18 +180,39 @@ function changeColor(e) {
     if (e.target.parentElement != canvas) {return;}
 
     if (checkPaintingMode(e) == "painting"){ 
+
         switch (checkBrushMode()) {
-            case "shading":
+
+            case "shading": {
                 let targetColor = e.target.style.backgroundColor; //rgb
-                //convert to hsl first, then darken => raise s, lower l
+                if (targetColor == "white"||targetColor == "") {
+                    targetColor = "rgb(255,255,255)";
+                }
+                //convert to hsl first, then darken
                 let HSLarray = rgbtoHSL(targetColor);
-                HSLarray[1] += 2;  //raise saturation
                 HSLarray[2] -= 5;  //lower lightness
-                e.target.style.backgroundColor = HSLarrayToString(HSLarray);          
-            case "lighten":
-                break
-            case "rainbow":
-                break
+                e.target.style.backgroundColor = HSLarrayToString(HSLarray);
+            }
+                break;
+
+            case "lighten": {
+                let targetColor = e.target.style.backgroundColor; //rgb
+                if (targetColor == "white"||targetColor == "") {
+                    targetColor = "rgb(255,255,255)";
+                }
+                //convert to hsl first, then lighten
+                let HSLarray = rgbtoHSL(targetColor);
+                HSLarray[2] += 5;  //lower lightness
+                e.target.style.backgroundColor = HSLarrayToString(HSLarray); 
+            }
+                break;
+
+            case "rainbow": {
+                let randomColor = rainbowColors[getRandomInt(7)];
+                e.target.style.backgroundColor = randomColor;
+            }
+                break;
+
             default:
                 e.target.style.backgroundColor = color;
         }
@@ -273,11 +300,79 @@ function removeChildElements(parentElement) {
     }
 }
 
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+  }
+
 // e.buttons
 //1 left click
 //2 right click
 //3 both click
-
+ 
 // e.altKey, e.ctrlKey
 
+
+//onece you click on the canvas with filling = "on" (add event listener)
+// a 2-dimensionary array is generated according to the canvas
+// find out where the mouse is clicking on the array
+
+function genArrayFromCanvas() {
+    //initialize an 2d array with empty rows. number of rows = grid size
+    let arr = [];
+    for (let a = 0; a < gridSize; a++) {
+        arr.push([]);
+    }
+    //populate the array with the grid elements
+    for (let a = 0; a<gridSize**2; a++) {
+        let rowNumber = Math.floor(a/gridSize);  //the element belongs to this row
+        arr[rowNumber].push(canvas.children[a]);
+    }
+    return arr;
+}
+
+function getCoordinatesOfTarget(e) {
+    let index = Array.from(canvas.children).indexOf(e.target);
+    let rowNumber = Math.floor(index/gridSize);
+    let colNumber = index % gridSize;
+    return [rowNumber,colNumber];  // a coord array
+}
+
+function findNeighbors(coord) {  //coord is a coord array [x,y] of the target
+    let x = coord[1];
+    let y = coord[2];
+    return [
+        [x-1,y-1],[x,y-1],[x+1,y-1],
+        [x-1,y],[x+1,y],
+        [x-1,y+1],[x,y+1],[x+1,y+1]
+    ]; //this can return invalid(negative) coords, like [-1, 2]
+}
+
+function fill(array, x, y, oldColor, newColor) {
+    // in the event listener's callback function (floodFill)
+    // pass color to newColor;
+    // pass e.target.style.backgroundColor to oldColor 
+    
+    if ( x<0 || x>= array.length) {return;}
+    if ( y<0 || y>= array[0].length) {return;}
+    if (array[x][y].style.backgroundColor != oldColor) {return;}
+
+    let visited = []; //coordinates that have been visited (color changed)
+
+    array[x][y].style.backgroundColor = newColor;
+    visited.push([x,y]);
+    let moves = findNeighbors([x,y]);
+
+    for (let move of moves) {
+        if (!visited.includes(move)) {
+            fill(array, move[0], move[1], oldColor, newColor);
+        }
+    }
+}
+
+function floodFill(e) {
+    let canvasArray = genArrayFromCanvas();
+    let coord = getCoordinatesOfTarget(e);  // [x,y]
+    let currentColor = e.target.style.backgroundColor;
+    fill(canvasArray, coord[0], coord[1], currentColor, color);
+}
 

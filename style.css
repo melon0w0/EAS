@@ -34,8 +34,6 @@ body {
     cursor: cell;
 }
 
-
-
 header {
     display: flex;
     justify-content: center;
@@ -115,7 +113,7 @@ button {
 }
 
 button[value = "on"] {
-    background-color: rgba(182, 87, 90, 0.603);
+    background-color: rgba(172, 91, 94, 0.822);
 }
 
 button:hover{
@@ -159,9 +157,21 @@ a {
 
 .tips h1 {
     font-size: 20px;
-/*     background-color: rgb(100, 150,30);
-    background-color: hsl(85, 67%, 35%); */
-
 }
 
 /* [0.23611111111111108, 0.6666666666666666, 0.35294117647058826] */
+
+/* Color Theme Swatches in Hex */
+
+
+/* Color Theme Swatches in RGBA */
+.Copy-of-Pastel-Rainbow-1-rgba { color: rgba(168, 230, 207, 1); }
+.Copy-of-Pastel-Rainbow-2-rgba { color: rgba(219, 237, 193, 1); }
+.Copy-of-Pastel-Rainbow-3-rgba { color: rgba(255, 211, 182, 1); }
+.Copy-of-Pastel-Rainbow-4-rgba { color: rgba(255, 170, 165, 1); }
+.Copy-of-Pastel-Rainbow-5-rgba { color: rgba(255, 138, 147, 1); }
+
+
+
+/* "#FF8B94", "#FFAAA5", "#FFD3B6", "#DCEDC1", "#A8E6CF", "#A8B6F1", "#EE9CEF"
+ */
