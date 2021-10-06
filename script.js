@@ -377,11 +377,35 @@ function redo() {
     recoverFrom(nextState);
 }
 
-canvas.addEventListener("mouseup", recordMove);
-canvas.addEventListener("keyup", recordMove);
-buttonClear.addEventListener("click", recordMove);
+canvas.addEventListener("mouseup", (e) => {
+    if (e.button == 0 || e.button == 2) { //if the mouseup is indeed a painting move
+        recordMove()
+    }
+});
+
+canvas.addEventListener("keyup", (e) => {
+    if (e.code == "AltLeft" || e.code == "ControlLeft") {// if the keyup is indded a painting move
+        recordMove();
+    }
+});
+
+buttonClear.addEventListener("click", recordMove); // and right click
+
 buttonUndo.addEventListener("click", undo);
 buttonRedo.addEventListener("click", redo);
+
+//undo and redo hotkeys
+document.addEventListener("keydown", (e)=> {
+    if (e.shiftKey == true && e.code=="KeyZ") {
+        undo();
+    }
+})
+
+document.addEventListener("keydown", (e)=> {
+    if (e.shiftKey==true && e.code=="KeyA") {
+        redo();
+    }
+})
 //#endregion
 
 //#region color format conversion functions
@@ -446,4 +470,3 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
   }
 //#endregion
-
