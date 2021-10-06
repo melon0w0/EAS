@@ -193,15 +193,22 @@ canvas.addEventListener("mousedown",changeColor);
 canvas.addEventListener("keydown",changeColor);
 canvas.addEventListener("dblclick", floodFill); //dbclick currently doesn't work bc there's a mousedown event 
 
+let alreadyShadedOrLightened = [];
+canvas.addEventListener("mouseup", () => {
+    alreadyShadedOrLightened = [];   //everytime a "painting move" like a mouseup finishes, reset the array
+});
+canvas.addEventListener("keyup", () => {
+    alreadyShadedOrLightened = [];   //everytime a "painting move" like a mouseup finishes, reset the array
+});
 
 function changeColor(e) {
+
     if (e.target.parentElement != canvas) {return;}
 
     if (checkPaintingMode(e) == "painting"){ 
-
         switch (checkBrushMode()) {
-
             case "shading": {
+                if (alreadyShadedOrLightened.includes(e.target)) {return;}
                 let targetColor = e.target.style.backgroundColor; //rgb
                 if (targetColor == "white"||targetColor == "") {
                     targetColor = "rgb(255,255,255)";
@@ -210,10 +217,12 @@ function changeColor(e) {
                 let HSLarray = rgbtoHSL(targetColor);
                 HSLarray[2] -= 5;  //lower lightness
                 e.target.style.backgroundColor = HSLarrayToString(HSLarray);
+                alreadyShadedOrLightened.push(e.target);
             }
                 break;
 
             case "lighten": {
+                if (alreadyShadedOrLightened.includes(e.target)) {return;}
                 let targetColor = e.target.style.backgroundColor; //rgb
                 if (targetColor == "white"||targetColor == "") {
                     targetColor = "rgb(255,255,255)";
@@ -222,6 +231,7 @@ function changeColor(e) {
                 let HSLarray = rgbtoHSL(targetColor);
                 HSLarray[2] += 5;  //lower lightness
                 e.target.style.backgroundColor = HSLarrayToString(HSLarray); 
+                alreadyShadedOrLightened.push(e.target);
             }
                 break;
 
@@ -238,9 +248,15 @@ function changeColor(e) {
     else if (checkPaintingMode(e) == "erasing"){
         e.target.style.backgroundColor = "white";}
     
+    else if (checkPaintingMode(e) == "bucket") {
+        floodFill(e);
+    }
 }
 
 function checkPaintingMode(e) {
+    if (e.code == "KeyB") {
+        return "bucket";
+    }
     if (e.altKey == true || e.buttons == 1) {
         return "painting";
     }
@@ -470,3 +486,4 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
   }
 //#endregion
+
