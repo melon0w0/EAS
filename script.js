@@ -117,7 +117,7 @@ function resetGridsize(gridsize) {
         canvas.appendChild(unit);
     }
     history = [];
-    history.push(archiveFromCanvas());
+    history.push(archiveCanvas());
     loc = 0;
 }
 //#endregion
@@ -146,7 +146,9 @@ for (let button of regularButtons) {
 // we add the toggleButton function first to all the buttons' click event
 // then we add that whatever unique functions fired after this function
 // note that the buttons' value will be already reversed after toggleButton is called
-buttonToggleGrid.addEventListener("click", function(e) {
+buttonToggleGrid.addEventListener("click", checkGridlineSettingsAndToggleGridline);
+
+function checkGridlineSettingsAndToggleGridline() { //why do I suck at naming things?
     if (buttonToggleGrid.value == "on") {
         for (let unit of canvas.children) {
             unit.classList.add("gridOn");
@@ -156,7 +158,7 @@ buttonToggleGrid.addEventListener("click", function(e) {
             unit.classList.remove("gridOn");
         }
     }
-})
+}
 
 // for the mutually exclusive buttons, only 1 button can be on at a time. How to do this?
 function toggleMutuallyExclusiveButton(e) {
@@ -322,7 +324,7 @@ function floodFill(e) {
 //#endregion
 
 //#region undo/redo
-function archiveFromCanvas() {
+function archiveCanvas() {
     arr = [];
     for (let unit of canvas.children) {
         arr.push(unit.cloneNode());
@@ -337,20 +339,19 @@ function recordMove() {
 
     if (history.length != maxHistoryStored) {
         loc++;
-    } else {//history is full, reset it!  
-        //<= this is not a great idea, need to instead drop the first archive from history
-        histroy = [];
-        loc = 0;
+    } else {
+        //history is full, drop the first archive to make room for the new
+        //loc doesn't change because you'll still be at loc 10
+        history.shift();    
     }
-    history.push(archiveFromCanvas());
+    history.push(archiveCanvas());
 }
+//this will also record gridline state
+//when recovering from history using undo() & redo() we'll need to apply the current gridline state
 
-function undo() {
-    if (loc == 0) {return;}
-    loc--;
-    previousState = history[loc];
+function recoverFrom(state) {
     removeChildElements(canvas);
-    for (let unit of previousState) {
+    for (let unit of state) {
         canvas.appendChild(unit.cloneNode());
     }
     //although we recover it from an archived state/array
@@ -358,20 +359,22 @@ function undo() {
     for (let unit of canvas.children) {
         unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
     }
+    //apply the current gridline state
+    checkGridlineSettingsAndToggleGridline();
+}
+
+function undo() {
+    if (loc == 0) {return;}
+    loc--;
+    previousState = history[loc];
+    recoverFrom(previousState);
 }
 
 function redo() {
     if (loc+1 ==  history.length) {return;}
     loc++;
     nextState = history[loc];
-    removeChildElements(canvas);
-    for (let unit of nextState) {
-        canvas.appendChild(unit.cloneNode());
-    }
-    //same as before, add the event listeners back
-    for (let unit of canvas.children) {
-        unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
-    }
+    recoverFrom(nextState);
 }
 
 canvas.addEventListener("mouseup", recordMove);

@@ -4,3 +4,5 @@
 //3 both click
  
 // e.altKey, e.ctrlKey
+
+Shading/lighten improvements
