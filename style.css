@@ -16,7 +16,6 @@ body {
     margin-top: 20px;
 }
 
-
 .canvas {
     width: 40vw;
     height: 40vw;
@@ -36,7 +35,7 @@ header {
     justify-content: center;
     align-items: center;
     gap: 80px;
-    margin: 35px 0;
+    margin: 50px 0;
 }
 
 header h1 {
@@ -86,22 +85,11 @@ img {
     color: white;
 }
 
-.gridsize_.settings {
-    flex-direction: row;
-}
-
 .settingsSection {
     display: flex;
     flex-direction: column;
     gap: 20px;
     margin-right: 10vw;
-}
-
-.canvas + div {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-    padding: 0 10px;
 }
 
 button {
@@ -131,8 +119,9 @@ footer {
     color: white;
 }
 
-a {
-    color: rgb(255, 224, 224);
+footer a {
+    color: rgb(255, 255, 255);
+    text-decoration: none;
 }
 
 .unit.gridOn {
@@ -157,22 +146,32 @@ a {
     width: 70vw;
     margin: 50px auto;
     margin-bottom: 0;
-    padding: 10px 30px;
+    padding: 30px;
     border-radius: 10px;
 }
 
 .tips h1 {
-    font-size: 20px;
+    font-size: 25px;
+}
+
+.tips li {
+    font-size: smaller;
 }
 
 .undoredo {
     text-align: center;
 }
 
-.mid-top{
-    text-align: center;
+.bottom{
+    display: flex;
+    padding: 0 10px;
+    justify-content: space-between;
 }
 
 button[value = "on"], button[value = "horizontal"], button[value = "vertical"]  {
     background-color: rgba(172, 91, 94, 0.822);
+}
+
+button[data-index = "11"] {
+    text-decoration: line-through;
 }

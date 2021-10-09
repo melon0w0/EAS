@@ -1,6 +1,6 @@
 //#region variable declarations and app initializing
 let color = "#A58888";  //current brush color. changes each time user inputs color
-let gridSize = 16;  //changes each time user finishing adjusting gridSize
+let gridSize = 16;  //changes each time user finishing adjusting gridSize.
 
 let maxHistoryStored = 10;
 let history;  //array of canvas history (in 1D array form). 
@@ -36,7 +36,7 @@ canvas.addEventListener("contextmenu", e => e.preventDefault());
 palette.addEventListener("contextmenu", e => e.preventDefault());
 
 //initialize the app
-resetGridsize(16);
+resetGridSize();
 resetPalette();
 //#endregion
 
@@ -91,27 +91,31 @@ function resetPalette() {
 
 //#region gridsize setting
 inputGridsize.addEventListener("input", function(e) {
-    gridsize = e.target.value;
-    displayGridsize[0].textContent = gridsize;
-    displayGridsize[1].textContent = gridsize;
+    gridSize = e.target.value;
+    displayGridsize[0].textContent = gridSize;
+    displayGridsize[1].textContent = gridSize;
 })
 
 inputGridsize.addEventListener("change", function(e) {
     gridSize = e.target.value;
-    resetGridsize(e.target.value);
+    resetGridSize();
 })
 
-function resetGridsize(gridsize) {
+function resetGridSize() {
     removeChildElements(canvas);
     // populate canvas with grid units
-    for (let x = 0; x < gridsize**2; x++) {
+    for (let x = 0; x < gridSize**2; x++) {
         let unit = document.createElement("div");
         unit.classList.add("unit");
-        unit.style.width = `${1/gridsize*100}%`;
-        unit.style.height = `${1/gridsize*100}%`;
+        unit.style.width = `${1/gridSize*100}%`;
+        unit.style.height = `${1/gridSize*100}%`;
         unit.setAttribute("tabindex","0")
         unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
         canvas.appendChild(unit);
+    }
+    if (gridSize % 2 != 0) {
+        buttonMirror.value = "off";
+        buttonMirror.textContent = "mirror: off";
     }
     checkGridlineSettingsAndToggleGridline();
     checkMirrorSettingsAndToggleLine();
@@ -167,9 +171,8 @@ buttonMirror.addEventListener("click", () => { //this button has 3 states: horiz
     }
 })
 
-function checkMirrorSettingsAndToggleLine() { //also used for resetGridsize() and undo/redo
+function checkMirrorSettingsAndToggleLine() { //also used for resetGridSize() and undo/redo
     let canvas2dArray = gen2dArrayFromCanvas();
-
     for (let x=0; x<gridSize; x++) {
         for (let y=0; y<gridSize; y++) {
             canvas2dArray[x][y].classList.remove("mirrorHorizontal");
@@ -310,9 +313,9 @@ function changeColor(e) {
                 }
         }
     }
-    else if (checkPaintingMode(e) == "erasing"){
-        for (let unit of unitToChange){
-            unit.style.backgroundColor = "white";
+    else if (checkPaintingMode(e) == "erasing") {
+        for (let unit of unitToChange) {
+            unit.style.backgroundColor = "";
         }
     }
     
@@ -321,7 +324,7 @@ function changeColor(e) {
     }
 }
 
-function checkPaintingMode(e) {
+function checkPaintingMode(e) { //change the hotkey here
     if (e.code == "KeyB") {
         return "bucket";
     }
@@ -333,7 +336,7 @@ function checkPaintingMode(e) {
     }
 }
 
-function checkBrushMode() { //shading, lightening or rainbow
+function checkBrushMode() { //shading, lightening or rainbow. only applied to brush, (not eraser or bucket)
     if (buttonShading.value == "on") {return "shading";}
     if (buttonLighten.value == "on") {return "lighten";}
     if (buttonRainbow.value == "on") {return "rainbow";}
@@ -341,7 +344,7 @@ function checkBrushMode() { //shading, lightening or rainbow
 
 buttonClear.addEventListener("click", () => {
     for (unit of canvas.children) {
-        unit.style.backgroundColor = "white";
+        unit.style.backgroundColor = "";
     }
     inputBackgroundColor.value = "#FFFFFF";
 });
