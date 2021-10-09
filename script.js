@@ -23,11 +23,11 @@ const buttonLighten = document.querySelector("button[data-index = '4']");
 const buttonRainbow = document.querySelector("button[data-index = '5']");
 const buttonToggleGrid = document.querySelector("button[data-index = '6']");
 const buttonMirror = document.querySelector("button[data-index = '7']");
-const regularButtons = [buttonToggleGrid, buttonMirror];
+const regularButtons = [buttonToggleGrid];
 const mutuallyExclusiveButtons = [buttonShading, buttonLighten, buttonRainbow];
 
 const canvas = document.querySelector(".canvas");
-const buttonClear = document.querySelector(".clear");
+const buttonClear = document.querySelector("button[data-index = '10']");
 const buttonUndo = document.querySelector("button[data-index = '8']");
 const buttonRedo = document.querySelector("button[data-index = '9']");
 const rainbowColors = ["#FF8B94", "#FFAAA5", "#FFD3B6", "#DCEDC1", "#A8E6CF", "#A8B6F1", "#E9AADF"]
@@ -116,6 +116,7 @@ function resetGridsize(gridsize) {
         unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
         canvas.appendChild(unit);
     }
+    inputBackgroundColor.value = "#FFFFFF";
     history = [];
     history.push(archiveCanvas());
     loc = 0;
@@ -123,6 +124,7 @@ function resetGridsize(gridsize) {
 //#endregion
 
 //#region toggleable buttons
+
 // note: if you write 2 callback functions for an element's event listener of the same type
 // e.g. element.addEventListener("click", function1)
 //      element.addEventListener("click", function2)
@@ -143,6 +145,59 @@ function toggleNormalButton(e) { //this only changes the value and appearence of
 for (let button of regularButtons) {
     button.addEventListener("click", toggleNormalButton);
 } 
+
+buttonMirror.addEventListener("click", () => { //this button has 3 states: horizontal, vertical or off
+    let canvas2dArray = gen2dArrayFromCanvas();
+    switch (buttonMirror.value) {
+        case "off":
+            buttonMirror.value = "horizontal";
+            buttonMirror.textContent = buttonMirror.textContent.replace("off", "horizontal");
+            for (let x = 0; x<gridSize; x++) {
+                canvas2dArray[x][gridSize/2-1].classList.add("mirrorHorizontal");
+            }
+            break;
+
+        case "horizontal":
+            buttonMirror.value = "vertical";
+            buttonMirror.textContent = buttonMirror.textContent.replace("horizontal", "vertical");
+            for (let x = 0; x<gridSize; x++) {
+                canvas2dArray[x][gridSize/2-1].classList.remove("mirrorHorizontal");
+                canvas2dArray[gridSize/2-1][x].classList.add("mirrorVertical")
+            }
+            break;
+
+        case "vertical":
+            buttonMirror.value = "off";
+            buttonMirror.textContent = buttonMirror.textContent.replace("vertical", "off");
+            for (let x = 0; x<gridSize; x++) {
+                canvas2dArray[gridSize/2-1][x].classList.remove("mirrorVertical")
+            }
+    }
+})
+
+function checkMirrorSettingsAndToggleLine() { //later for undo-redo
+    let canvas2dArray = gen2dArrayFromCanvas();
+
+    for (let x=0; x<gridSize; x++) {
+        for (let y=0; y<gridSize; y++) {
+            canvas2dArray[x][y].classList.remove("mirrorHorizontal");
+            canvas2dArray[x][y].classList.remove("mirrorVertical");
+        }
+    }
+    switch (buttonMirror.value) {
+        case "horizontal":
+            for (let x = 0; x<gridSize; x++) {
+                canvas2dArray[x][gridSize/2-1].classList.add("mirrorHorizontal");
+            }
+            break;
+        
+        case "vertical":
+            for (let x = 0; x<gridSize; x++) {
+                canvas2dArray[gridSize/2-1][x].classList.add("mirrorVertical")
+            }
+    }
+}
+
 // we add the toggleButton function first to all the buttons' click event
 // then we add that whatever unique functions fired after this function
 // note that the buttons' value will be already reversed after toggleButton is called
@@ -162,8 +217,7 @@ function checkGridlineSettingsAndToggleGridline() { //why do I suck at naming th
 
 // for the mutually exclusive buttons, only 1 button can be on at a time. How to do this?
 function toggleMutuallyExclusiveButton(e) {
-    let button = e.target;
-
+    let button = e.currentTarget;
     if (button.value == "off") {
         for (let otherButton of mutuallyExclusiveButtons) {
             if (otherButton.value == "on") {
@@ -191,7 +245,6 @@ for (let button of mutuallyExclusiveButtons) {
 canvas.addEventListener("mouseover",changeColor); 
 canvas.addEventListener("mousedown",changeColor);
 canvas.addEventListener("keydown",changeColor);
-canvas.addEventListener("dblclick", floodFill); //dbclick currently doesn't work bc there's a mousedown event 
 
 let alreadyShadedOrLightened = [];
 canvas.addEventListener("mouseup", () => {
@@ -375,8 +428,9 @@ function recoverFrom(state) {
     for (let unit of canvas.children) {
         unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
     }
-    //apply the current gridline state
+    //apply the current gridline and mirror state
     checkGridlineSettingsAndToggleGridline();
+    checkMirrorSettingsAndToggleLine();
 }
 
 function undo() {
@@ -395,15 +449,17 @@ function redo() {
 
 canvas.addEventListener("mouseup", (e) => {
     if (e.button == 0 || e.button == 2) { //if the mouseup is indeed a painting move
-        recordMove()
+        recordMove();
     }
 });
 
 canvas.addEventListener("keyup", (e) => {
-    if (e.code == "AltLeft" || e.code == "ControlLeft") {// if the keyup is indded a painting move
+    if (e.code == "AltLeft" || e.code == "ControlLeft" || e.code == "KeyB") {// if the keyup is indded a painting move
         recordMove();
     }
 });
+
+inputBackgroundColor.addEventListener("change", recordMove);
 
 buttonClear.addEventListener("click", recordMove); // and right click
 
