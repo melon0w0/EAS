@@ -91,14 +91,14 @@ function resetPalette() {
 
 //#region gridsize setting
 inputGridsize.addEventListener("input", function(e) {
-    let gridsize = e.target.value;
+    gridsize = e.target.value;
     displayGridsize[0].textContent = gridsize;
     displayGridsize[1].textContent = gridsize;
 })
 
 inputGridsize.addEventListener("change", function(e) {
-    resetGridsize(e.target.value);
     gridSize = e.target.value;
+    resetGridsize(e.target.value);
 })
 
 function resetGridsize(gridsize) {
@@ -107,15 +107,14 @@ function resetGridsize(gridsize) {
     for (let x = 0; x < gridsize**2; x++) {
         let unit = document.createElement("div");
         unit.classList.add("unit");
-        if (buttonToggleGrid.value == "on") {
-            unit.classList.add("gridOn");
-        }
         unit.style.width = `${1/gridsize*100}%`;
         unit.style.height = `${1/gridsize*100}%`;
         unit.setAttribute("tabindex","0")
         unit.addEventListener("mouseenter", (e)=> {e.target.focus()})
         canvas.appendChild(unit);
     }
+    checkGridlineSettingsAndToggleGridline();
+    checkMirrorSettingsAndToggleLine();
     inputBackgroundColor.value = "#FFFFFF";
     history = [];
     history.push(archiveCanvas());
@@ -147,35 +146,28 @@ for (let button of regularButtons) {
 } 
 
 buttonMirror.addEventListener("click", () => { //this button has 3 states: horizontal, vertical or off
-    let canvas2dArray = gen2dArrayFromCanvas();
+    if (gridSize %2 != 0) {return;}
     switch (buttonMirror.value) {
         case "off":
             buttonMirror.value = "horizontal";
             buttonMirror.textContent = buttonMirror.textContent.replace("off", "horizontal");
-            for (let x = 0; x<gridSize; x++) {
-                canvas2dArray[x][gridSize/2-1].classList.add("mirrorHorizontal");
-            }
+            checkMirrorSettingsAndToggleLine();
             break;
 
         case "horizontal":
             buttonMirror.value = "vertical";
             buttonMirror.textContent = buttonMirror.textContent.replace("horizontal", "vertical");
-            for (let x = 0; x<gridSize; x++) {
-                canvas2dArray[x][gridSize/2-1].classList.remove("mirrorHorizontal");
-                canvas2dArray[gridSize/2-1][x].classList.add("mirrorVertical")
-            }
+            checkMirrorSettingsAndToggleLine();
             break;
 
         case "vertical":
             buttonMirror.value = "off";
             buttonMirror.textContent = buttonMirror.textContent.replace("vertical", "off");
-            for (let x = 0; x<gridSize; x++) {
-                canvas2dArray[gridSize/2-1][x].classList.remove("mirrorVertical")
-            }
+            checkMirrorSettingsAndToggleLine();
     }
 })
 
-function checkMirrorSettingsAndToggleLine() { //later for undo-redo
+function checkMirrorSettingsAndToggleLine() { //also used for resetGridsize() and undo/redo
     let canvas2dArray = gen2dArrayFromCanvas();
 
     for (let x=0; x<gridSize; x++) {
@@ -255,54 +247,77 @@ canvas.addEventListener("keyup", () => {
 });
 
 function changeColor(e) {
-
     if (e.target.parentElement != canvas) {return;}
+    let unitToChange;
+    let canvas2dArray = gen2dArrayFromCanvas();
+    let mouseCoords = getCoordinatesOfTarget(e);
+
+    if (buttonMirror.value == "horizontal") {
+        let horizontalMirrorCoords = [mouseCoords[0], gridSize-1-mouseCoords[1]];
+        unitToChange = [e.target, canvas2dArray[horizontalMirrorCoords[0]][horizontalMirrorCoords[1]]];
+    } else if (buttonMirror.value == "vertical") {
+        let verticalMirrorCoords = [gridSize-1-mouseCoords[0],mouseCoords[1]];
+        unitToChange = [e.target, canvas2dArray[verticalMirrorCoords[0]][verticalMirrorCoords[1]]];
+    } else { //mirror is off
+        unitToChange = [e.target];
+    }
 
     if (checkPaintingMode(e) == "painting"){ 
         switch (checkBrushMode()) {
             case "shading": {
-                if (alreadyShadedOrLightened.includes(e.target)) {return;}
-                let targetColor = e.target.style.backgroundColor; //rgb
-                if (targetColor == "white"||targetColor == "") {
-                    targetColor = "rgb(255,255,255)";
+                for (let unit of unitToChange) {
+                    if (alreadyShadedOrLightened.includes(unit)) {continue;}
+                    let targetColor = unit.style.backgroundColor; //rgb
+                    if (targetColor == "white"||targetColor == "") {
+                        targetColor = "rgb(255,255,255)";
+                    }
+                    //convert to hsl first, then darken
+                    let HSLarray = rgbtoHSL(targetColor);
+                    HSLarray[2] -= 5;  //lower lightness
+                    unit.style.backgroundColor = HSLarrayToString(HSLarray);
+                    alreadyShadedOrLightened.push(unit);
                 }
-                //convert to hsl first, then darken
-                let HSLarray = rgbtoHSL(targetColor);
-                HSLarray[2] -= 5;  //lower lightness
-                e.target.style.backgroundColor = HSLarrayToString(HSLarray);
-                alreadyShadedOrLightened.push(e.target);
             }
                 break;
 
             case "lighten": {
-                if (alreadyShadedOrLightened.includes(e.target)) {return;}
-                let targetColor = e.target.style.backgroundColor; //rgb
-                if (targetColor == "white"||targetColor == "") {
-                    targetColor = "rgb(255,255,255)";
+                for (let unit of unitToChange) {
+                    if (alreadyShadedOrLightened.includes(unit)) {continue;}
+                    let targetColor = unit.style.backgroundColor; //rgb
+                    if (targetColor == "white"||targetColor == "") {
+                        targetColor = "rgb(255,255,255)";
+                    }
+                    //convert to hsl first, then lighten
+                    let HSLarray = rgbtoHSL(targetColor);
+                    HSLarray[2] += 5;  //lower lightness
+                    unit.style.backgroundColor = HSLarrayToString(HSLarray); 
+                    alreadyShadedOrLightened.push(unit);
                 }
-                //convert to hsl first, then lighten
-                let HSLarray = rgbtoHSL(targetColor);
-                HSLarray[2] += 5;  //lower lightness
-                e.target.style.backgroundColor = HSLarrayToString(HSLarray); 
-                alreadyShadedOrLightened.push(e.target);
             }
                 break;
 
             case "rainbow": {
                 let randomColor = rainbowColors[getRandomInt(7)];
-                e.target.style.backgroundColor = randomColor;
+                for (let unit of unitToChange) {
+                    unit.style.backgroundColor = randomColor;
+                }
             }
                 break;
 
             default:
-                e.target.style.backgroundColor = color;
+                for (let unit of unitToChange) {
+                    unit.style.backgroundColor = color;
+                }
         }
     }
     else if (checkPaintingMode(e) == "erasing"){
-        e.target.style.backgroundColor = "white";}
+        for (let unit of unitToChange){
+            unit.style.backgroundColor = "white";
+        }
+    }
     
     else if (checkPaintingMode(e) == "bucket") {
-        floodFill(e);
+        floodFill(e);  
     }
 }
 
